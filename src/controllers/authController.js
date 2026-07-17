@@ -12,7 +12,18 @@ exports.register = async (req, res) => {
     if (userExists) return res.status(400).json({ success: false, message: 'User already exists' });
 
     const user = await User.create({ name, email, password });
-    res.status(201).json({ success: true, token: generateToken(user._id) });
+    res.status(201).json({
+      success: true,
+      token: generateToken(user._id),
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -28,7 +39,30 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    res.status(200).json({ success: true, token: generateToken(user._id) });
+    res.status(200).json({
+      success: true,
+      token: generateToken(user._id),
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    res.status(200).json({ success: true, data: { user: req.user } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
